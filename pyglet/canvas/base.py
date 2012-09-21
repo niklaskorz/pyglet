@@ -141,7 +141,7 @@ class Screen(object):
                 try:
                     configs = self.get_matching_configs(template_config)
                     break
-                except NoSuchConfigException:
+                except window.NoSuchConfigException:
                     pass
         else:
             configs = self.get_matching_configs(template)

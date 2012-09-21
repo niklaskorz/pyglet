@@ -2,14 +2,14 @@
 # pyglet
 # Copyright (c) 2006-2008 Alex Holkner
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions 
+# modification, are permitted provided that the following conditions
 # are met:
 #
 #  * Redistributions of source code must retain the above copyright
 #    notice, this list of conditions and the following disclaimer.
-#  * Redistributions in binary form must reproduce the above copyright 
+#  * Redistributions in binary form must reproduce the above copyright
 #    notice, this list of conditions and the following disclaimer in
 #    the documentation and/or other materials provided with the
 #    distribution.
@@ -47,6 +47,7 @@ NSAutoreleasePool = ObjCClass('NSAutoreleasePool')
 NSDate = ObjCClass('NSDate')
 NSEvent = ObjCClass('NSEvent')
 
+
 def add_menu_item(menu, title, action, key):
     title = CFSTR(title)
     action = get_selector(action)
@@ -59,6 +60,7 @@ def add_menu_item(menu, title, action, key):
     title.release()
     key.release()
     menuItem.release()
+
 
 def create_menu():
     appMenu = NSMenu.alloc().init()
@@ -120,13 +122,13 @@ class CocoaEventLoop(PlatformEventLoop):
         if event is not None:
             event_type = event.type()
             if event_type != NSApplicationDefined:
-                # Send out event as normal.  Responders will still receive 
+                # Send out event as normal.  Responders will still receive
                 # keyUp:, keyDown:, and flagsChanged: events.
                 self.NSApp.sendEvent_(event)
 
                 # Resend key events as special pyglet-specific messages
                 # which supplant the keyDown:, keyUp:, and flagsChanged: messages
-                # because NSApplication translates multiple key presses into key 
+                # because NSApplication translates multiple key presses into key
                 # equivalents before sending them on, which means that some keyUp:
                 # messages are never sent for individual keys.   Our pyglet-specific
                 # replacements ensure that we see all the raw key presses & releases.
@@ -150,7 +152,7 @@ class CocoaEventLoop(PlatformEventLoop):
         #del pool
 
         return did_time_out
-    
+
     def stop(self):
         pass
 
@@ -170,4 +172,3 @@ class CocoaEventLoop(PlatformEventLoop):
 
         self.NSApp.postEvent_atStart_(notifyEvent, False)
         pool.drain()
-        

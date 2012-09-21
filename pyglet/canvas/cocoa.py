@@ -18,7 +18,7 @@ from pyglet.libs.darwin.cocoapy import *
 class CocoaDisplay(Display):
 
     def get_screens(self):
-        maxDisplays = 256 
+        maxDisplays = 256
         activeDisplays = (CGDirectDisplayID * maxDisplays)()
         count = c_uint32()
         quartz.CGGetActiveDisplayList(maxDisplays, activeDisplays, byref(count))
@@ -44,7 +44,7 @@ class CocoaScreen(Screen):
     # However the NSScreens.screens() message currently sends out a warning:
     # "*** -[NSLock unlock]: lock (<NSLock: 0x...> '(null)') unlocked when not locked"
     # on Snow Leopard and apparently causes python to crash on Lion.
-    # 
+    #
     # def get_nsscreen(self):
     #     """Returns the NSScreen instance that matches our CGDirectDisplayID."""
     #     NSScreen = ObjCClass('NSScreen')
@@ -67,7 +67,7 @@ class CocoaScreen(Screen):
 
     def get_modes(self):
         cgmodes = c_void_p(quartz.CGDisplayCopyAllDisplayModes(self._cg_display_id, None))
-        modes = [ CocoaScreenMode(self, cgmode) for cgmode in cfarray_to_list(cgmodes) ]
+        modes = [CocoaScreenMode(self, cgmode) for cgmode in cfarray_to_list(cgmodes)]
         cf.CFRelease(cgmodes)
         return modes
 
@@ -77,7 +77,7 @@ class CocoaScreen(Screen):
         quartz.CGDisplayModeRelease(cgmode)
         return mode
 
-    def set_mode(self, mode): 
+    def set_mode(self, mode):
         assert mode.screen is self
         quartz.CGDisplayCapture(self._cg_display_id)
         quartz.CGDisplaySetDisplayMode(self._cg_display_id, mode.cgmode, None)
@@ -109,7 +109,7 @@ class CocoaScreenMode(ScreenMode):
     def __del__(self):
         quartz.CGDisplayModeRelease(self.cgmode)
         self.cgmode = None
-        
+
     def getBitsPerPixel(self, cgmode):
         # from /System/Library/Frameworks/IOKit.framework/Headers/graphics/IOGraphicsTypes.h
         IO8BitIndexedPixels = "PPPPPPPP"
@@ -120,12 +120,15 @@ class CocoaScreenMode(ScreenMode):
         pixelEncoding = cfstring_to_string(cfstring)
         cf.CFRelease(cfstring)
 
-        if pixelEncoding == IO8BitIndexedPixels: return 8
-        if pixelEncoding == IO16BitDirectPixels: return 16
-        if pixelEncoding == IO32BitDirectPixels: return 32
+        if pixelEncoding == IO8BitIndexedPixels:
+            return 8
+        if pixelEncoding == IO16BitDirectPixels:
+            return 16
+        if pixelEncoding == IO32BitDirectPixels:
+            return 32
         return 0
 
-                   
+
 class CocoaCanvas(Canvas):
 
     def __init__(self, display, screen, nsview):

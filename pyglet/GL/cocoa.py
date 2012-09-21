@@ -6,6 +6,8 @@
 __docformat__ = 'restructuredtext'
 __version__ = '$Id: $'
 
+import platform
+
 from pyglet.gl.base import Config, CanvasConfig, Context
 
 from pyglet.gl import ContextException
@@ -18,6 +20,8 @@ from pyglet.libs.darwin.cocoapy import *
 
 NSOpenGLPixelFormat = ObjCClass('NSOpenGLPixelFormat')
 NSOpenGLContext = ObjCClass('NSOpenGLContext')
+NSOpenGLProfileVersion3_2Core = 0x3200
+NSOpenGLPFAOpenGLProfile = 99
 
 # Valid names for GL attributes and their corresponding NSOpenGL constant.
 _gl_attributes = {
@@ -36,7 +40,7 @@ _gl_attributes = {
     'fullscreen': NSOpenGLPFAFullScreen,
     'minimum_policy': NSOpenGLPFAMinimumPolicy,
     'maximum_policy': NSOpenGLPFAMaximumPolicy,
-    'screen_mask' : NSOpenGLPFAScreenMask,
+    'screen_mask': NSOpenGLPFAScreenMask,
 
     # Not supported in current pyglet API
     'color_float': NSOpenGLPFAColorFloat,
@@ -48,7 +52,7 @@ _gl_attributes = {
 
 # NSOpenGL constants which do not require a value.
 _boolean_gl_attributes = frozenset([
-    NSOpenGLPFAAllRenderers, 
+    NSOpenGLPFAAllRenderers,
     NSOpenGLPFADoubleBuffer,
     NSOpenGLPFAStereo,
     NSOpenGLPFAMinimumPolicy,
@@ -62,8 +66,8 @@ _boolean_gl_attributes = frozenset([
 ])
 
 # Attributes for which no NSOpenGLPixelFormatAttribute name exists.
-# We could probably compute actual values for these using 
-# NSOpenGLPFAColorSize / 4 and NSOpenGLFAAccumSize / 4, but I'm not that 
+# We could probably compute actual values for these using
+# NSOpenGLPFAColorSize / 4 and NSOpenGLFAAccumSize / 4, but I'm not that
 # confident I know what I'm doing.
 _fake_gl_attributes = {
     'red_size': 0,
@@ -75,8 +79,8 @@ _fake_gl_attributes = {
     'accum_alpha_size': 0
 }
 
-class CocoaConfig(Config):
 
+class CocoaConfig(Config):
     def match(self, canvas):
         # Construct array of attributes for NSOpenGLPixelFormat
         attrs = []
@@ -88,23 +92,34 @@ class CocoaConfig(Config):
             if attr not in _boolean_gl_attributes:
                 attrs.append(int(value))
 
-        # Support for RAGE-II, which is not compliant.
-        attrs.append(NSOpenGLPFAAllRenderers)
+        v, _, _ = platform.mac_ver()
+        mac_ver = float('.'.join(v.split('.')[:2]))
 
-        # Force selection policy.
-        attrs.append(NSOpenGLPFAMaximumPolicy)
+        use_legacy = True
+        if mac_ver >= 10.7 and (self.major_version == 3 and
+            self.minor_version == 2):
+            attrs.insert(0, NSOpenGLPFAOpenGLProfile)
+            attrs.insert(1, NSOpenGLProfileVersion3_2Core)
+            use_legacy = False
+
+        if use_legacy:
+            # Support for RAGE-II, which is not compliant.
+            attrs.append(NSOpenGLPFAAllRenderers)
+
+            # Force selection policy.
+            attrs.append(NSOpenGLPFAMaximumPolicy)
 
         # NSOpenGLPFAFullScreen is always supplied so we can switch to and
         # from fullscreen without losing the context.  Also must supply the
         # NSOpenGLPFAScreenMask attribute with appropriate display ID.
         # Note that these attributes aren't necessary to render in fullscreen
-        # on Mac OS X 10.6, because there we are simply rendering into a 
+        # on Mac OS X 10.6, because there we are simply rendering into a
         # screen sized window.  See:
         # http://developer.apple.com/library/mac/#documentation/GraphicsImaging/Conceptual/OpenGL-MacProgGuide/opengl_fullscreen/opengl_cgl.html%23//apple_ref/doc/uid/TP40001987-CH210-SW6
-        attrs.append(NSOpenGLPFAFullScreen)
-        attrs.append(NSOpenGLPFAScreenMask)
-        attrs.append(quartz.CGDisplayIDToOpenGLDisplayMask(quartz.CGMainDisplayID()))
-        
+            attrs.append(NSOpenGLPFAFullScreen)
+            attrs.append(NSOpenGLPFAScreenMask)
+            attrs.append(quartz.CGDisplayIDToOpenGLDisplayMask(quartz.CGMainDisplayID()))
+
         # Terminate the list.
         attrs.append(0)
 
@@ -112,7 +127,7 @@ class CocoaConfig(Config):
         attrsArrayType = c_uint32 * len(attrs)
         attrsArray = attrsArrayType(*attrs)
         pixel_format = NSOpenGLPixelFormat.alloc().initWithAttributes_(attrsArray)
-       
+
         # Return the match list.
         if pixel_format is None:
             return []
@@ -132,11 +147,11 @@ class CocoaCanvasConfig(CanvasConfig):
             vals = c_int()
             self._pixel_format.getValues_forAttribute_forVirtualScreen_(byref(vals), attr, 0)
             setattr(self, name, vals.value)
-        
+
         # Set these attributes so that we can run pyglet.info.
         for name, value in _fake_gl_attributes.items():
             setattr(self, name, value)
- 
+
     def create_context(self, share):
         # Determine the shared NSOpenGLContext.
         if share:
