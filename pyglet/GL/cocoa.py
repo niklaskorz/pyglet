@@ -102,12 +102,11 @@ class CocoaConfig(Config):
             attrs.insert(1, NSOpenGLProfileVersion3_2Core)
             use_legacy = False
 
-        if use_legacy:
-            # Support for RAGE-II, which is not compliant.
-            attrs.append(NSOpenGLPFAAllRenderers)
+        # Support for RAGE-II, which is not compliant.
+        attrs.append(NSOpenGLPFAAllRenderers)
 
-            # Force selection policy.
-            attrs.append(NSOpenGLPFAMaximumPolicy)
+        # Force selection policy.
+        attrs.append(NSOpenGLPFAMaximumPolicy)
 
         # NSOpenGLPFAFullScreen is always supplied so we can switch to and
         # from fullscreen without losing the context.  Also must supply the
@@ -116,9 +115,10 @@ class CocoaConfig(Config):
         # on Mac OS X 10.6, because there we are simply rendering into a
         # screen sized window.  See:
         # http://developer.apple.com/library/mac/#documentation/GraphicsImaging/Conceptual/OpenGL-MacProgGuide/opengl_fullscreen/opengl_cgl.html%23//apple_ref/doc/uid/TP40001987-CH210-SW6
+        if use_legacy:
             attrs.append(NSOpenGLPFAFullScreen)
-            attrs.append(NSOpenGLPFAScreenMask)
-            attrs.append(quartz.CGDisplayIDToOpenGLDisplayMask(quartz.CGMainDisplayID()))
+        attrs.append(NSOpenGLPFAScreenMask)
+        attrs.append(quartz.CGDisplayIDToOpenGLDisplayMask(quartz.CGMainDisplayID()))
 
         # Terminate the list.
         attrs.append(0)
