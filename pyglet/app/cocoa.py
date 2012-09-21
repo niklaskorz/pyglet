@@ -91,11 +91,10 @@ class CocoaEventLoop(PlatformEventLoop):
         self.pool = NSAutoreleasePool.alloc().init()
         create_menu()
         self.NSApp.setActivationPolicy_(NSApplicationActivationPolicyRegular)
-        self.NSApp.finishLaunching()
-        self.NSApp.activateIgnoringOtherApps_(True)
 
     def start(self):
-        pass
+        self.NSApp.finishLaunching()
+        self.NSApp.activateIgnoringOtherApps_(True)
 
     def step(self, timeout=None):
         # Drain the old autorelease pool
