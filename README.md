@@ -1,3 +1,15 @@
+Note for using OpenGL 3.2
+-------------------------
+You will have to override the on_resize event or else your program will crash,
+because the default one of Pyglet calls OpenGL functions that are not
+available anymore in OpenGL 3.2.
+It may look like this:
+```python
+@window.event
+def on_resize(width, height):
+    return pyglet.event.EVENT_HANDLED
+```
+
 pyglet
 ======
 
